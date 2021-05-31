@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>List Shop</title>
+	<meta charset="utf-8">
+
+
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+			header {
+				background-color: #5a71bb;
+				color: #fff;
+				text-align: center;
+
+				padding: 20px 0;
+			}
+
+			.lista-cadastro {
+				display: flex;
+				margin: 20px 0;
+				padding: 0px 20px;
+			}
+
+			.lista-cadastro input[type=text]{
+				flex: 1;
+				height: 40px;
+				padding-left: 20px;
+			} 		
+
+			.lista-produtos-single {
+				padding: 10px 0;
+				border-bottom: 1px solid #ccc;
+				display: flex;
+			}
+
+			.lista-produtos-single h3 {
+				flex: 1;
+				padding: 0 20px;
+			}
+
+			.price-produto {
+				text-align: right;
+				font-size: 17px;
+			}
+
+			h3.price-produto > span {
+				background-color: #5a71bb;	
+				padding: 8px 10px;
+				border-radius: 20px;
+				color: #fff;
+			}
+
+			.soma-produtos {
+				margin: 20px;
+			}
+
+			.saldo_value {
+				color: #000;
+			}
+
+			.saldo {
+				background-color: rgba(0,0,255,0);
+				display: inline-block;
+				position: relative;	
+
+				width: 212px;
+				height: 100px;
+				padding: 10px;
+				margin: 2px;
+			}
+
+			.saldo > p {
+				background-color: rgba(255,0,0,0.8);
+				color:  #ff9;
+				text-align: center;
+
+				/*display: inline-block;*/
+				position: relative;
+
+				width: 200px;
+
+				border-radius: 	40px;	
+
+				cursor: pointer;
+			}
+			.saldo_modal {
+				background-color: rgba(255,0,0,0);
+				padding: 10px;
+				border-radius: 26px;
+			}
+
+			.saldo .saldo_modal {
+				position: absolute;
+				z-index: 1;
+				left: 100%;
+				top: 0%;
+				visibility: hidden;
+			}
+
+			.saldo_modal_single > input[type=number] {
+				padding: 10px;
+				font-size: 16px;
+				font-weight: bold;
+			}
+
+			.saldo:hover .saldo_modal{
+				visibility: visible;
+			}
+
+			.limite_compra {
+				display: none;
+			}
+
+			.total_soma {
+				display: none;
+			}			
+
+		</style>
+
+</head>
+<body>
+
+
+	<header>
+		<h2>Lista de compras</h2>
+	</header>
+	<div class="saldo">
+		<p>Adicionar saldo disponível para compras ?</p>
+	<div class="saldo_modal">
+		<div class="saldo_modal_title">
+			<!-- <h2>Qual seu limite para hoje?</h2> -->
+		</div>
+		<div class="saldo_modal_single">
+			<input type="number" step="0.01" placeholder="Seu saldo..." name="saldo_limite">
+		</div>
+	</div>			
+	</div>
+	<div class="lista-cadastro">
+		<input type="text" placeholder="Nome do produto..." name="nome_produto">
+		<input type="text" placeholder="Valor produto" name="valor_produto">
+		<input type="submit" name="acao" value="Cadastrar">
+	</div>
+
+	<div class="lista-produtos">
+	</div>
+
+
+	<div class="soma-produtos">
+		<h1>Compra: <span id="total_compra" class="saldo_value">R$ 0.00</span></h1>
+		<div class="limite_compra"><h1>Limite: <span id="total_limite" class="saldo_value"></span></h1></div>
+		<div class="total_soma"><h1>Total: <span id="total_geral" class="saldo_value"></span></h1></div>
+	</div>		
+
+
+</body>
+
+<script type="text/javascript">
+
+	var total = 0;
+
+	document.querySelector("[name=saldo_limite]").addEventListener("keyup", ()=>{
+		addLimite();
+	});
+
+	document.querySelector("[name=saldo_limite]").addEventListener("blur", ()=>{
+		addLimiteDisponivel();
+	});
+
+	document.querySelector("[name=acao]").addEventListener("click", ()=>{
+		if(document.querySelector('[name=nome_produto]').value && document.querySelector('[name=valor_produto]').value){
+			addProduct();
+		}
+	});
+
+	function addLimite(){
+		document.querySelector('.limite_compra').style.display = "inline-block";
+		document.querySelector('.total_soma').style.display = "block";
+		if(document.querySelector("[name=saldo_limite]").value != ""){
+			// document.querySelector("#total_limite").innerText = "R$";
+			document.querySelector("#total_limite").innerText = `R$ ${parseFloat(document.querySelector("[name=saldo_limite]").value).toFixed(2)}`;
+		}else{
+			document.querySelector('.limite_compra').style.display = "none";
+			document.querySelector('.total_soma').style.display = "none";
+		}
+	}
+
+		var items = [];
+		function addProduct(){
+			var nomeProduto = document.querySelector('[name=nome_produto]');
+			var precoProduto = document.querySelector('[name=valor_produto]');
+			// alert(nomeProduto.value + precoProduto.value);
+			precoProduto.value = precoProduto.value.replace(",",".");
+			items.push({
+				nome: nomeProduto.value,
+				preco: precoProduto.value
+			});
+			// console.log(items);
+			var listaProdutos = document.querySelector('.lista-produtos');
+			// listaProdutos.innerHTML = "";
+			listaProdutos.innerHTML += 	
+				`
+				<div class="lista-produtos-single">
+					<h3>${nomeProduto.value}</h3>
+					<h3 class="price-produto">
+					<span>R$ ${precoProduto.value}</span>
+					</h3>
+				</div>
+			`;
+
+			nomeProduto.value = "";
+			precoProduto.value = "";
+			addProductSum();
+			console.log(document.querySelectorAll('.lista-produtos-single'));
+			document.querySelectorAll('.lista-produtos-single').forEach((element)=>{
+				element.addEventListener("click", ()=>{
+				removeProduct(element);
+			});
+			});
+
+	}
+
+	function addProductSum(){
+		total = 0;
+		if(items.length > 0){
+
+			items.forEach((val)=>{
+				total += parseFloat(val.preco);
+			});
+		}
+		document.querySelector('#total_compra').innerText =`R$ ${total.toFixed(2)}`;
+		addLimiteDisponivel();
+	}
+
+	function addLimiteDisponivel(){
+		valorLimite = document.querySelector('[name=saldo_limite]');
+		var limiteDisponivel = eval(valorLimite.value - total);
+		if(limiteDisponivel <= 0){
+			document.querySelector('#total_geral').style.color = '#f00';				
+		}else{
+			document.querySelector('#total_geral').style.color = '#008000';
+		}
+		document.querySelector('#total_geral').innerHTML = `R$ ${limiteDisponivel.toFixed(2)}`;					
+		}
+
+	function removeProduct(value){
+		items = items.filter((res)=>{
+			if(res.nome != value.querySelector('h3').innerText){	
+				return res;
+			}
+		});
+		console.log(items);
+		addProductSum();
+		addLimiteDisponivel();
+		value.remove();
+	}	
+
+</script>
+</html>
+
+
+
+
+
